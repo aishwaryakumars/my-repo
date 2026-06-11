@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Management System</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
+}
+
+body{
+    min-height:100vh;
+    background:linear-gradient(135deg,#667eea,#764ba2);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:30px;
+}
+
+.container{
+    width:100%;
+    max-width:1300px;
+    background:rgba(255,255,255,0.15);
+    backdrop-filter:blur(15px);
+    border-radius:20px;
+    padding:30px;
+    box-shadow:0 8px 32px rgba(0,0,0,0.3);
+}
+
+h1{
+    text-align:center;
+    color:white;
+    margin-bottom:25px;
+    font-size:36px;
+}
+
+.grid{
+    display:grid;
+    grid-template-columns:400px 1fr;
+    gap:25px;
+}
+
+.card{
+    background:rgba(255,255,255,0.2);
+    padding:25px;
+    border-radius:15px;
+    box-shadow:0 5px 20px rgba(0,0,0,0.2);
+}
+
+.card h2{
+    color:white;
+    margin-bottom:15px;
+}
+
+.form-group{
+    margin-bottom:15px;
+}
+
+label{
+    display:block;
+    color:white;
+    margin-bottom:5px;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    outline:none;
+    font-size:15px;
+}
+
+.btn{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+    font-size:16px;
+    font-weight:600;
+    transition:0.3s;
+}
+
+.btn-create{
+    background:#00c853;
+    color:white;
+}
+
+.btn-create:hover{
+    background:#009624;
+}
+
+.search-bar{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+.search-bar input{
+    flex:1;
+}
+
+.btn-search{
+    background:#2196f3;
+    color:white;
+    width:150px;
+}
+
+.btn-search:hover{
+    background:#1565c0;
+}
+
+.table-container{
+    overflow-x:auto;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    color:white;
+}
+
+table th{
+    background:rgba(255,255,255,0.2);
+    padding:15px;
+}
+
+table td{
+    padding:12px;
+    text-align:center;
+    border-bottom:1px solid rgba(255,255,255,0.1);
+}
+
+.action-btn{
+    padding:8px 12px;
+    border:none;
+    border-radius:5px;
+    cursor:pointer;
+    color:white;
+    margin:2px;
+}
+
+.edit{
+    background:#ff9800;
+}
+
+.delete{
+    background:#f44336;
+}
+
+.action-btn:hover{
+    transform:scale(1.05);
+}
+
+@media(max-width:900px){
+
+.grid{
+    grid-template-columns:1fr;
+}
+
+}
+
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>🎓 Student Management System</h1>
+
+<div class="grid">
+
+<!-- Form Section -->
+
+<div class="card">
+
+<h2>Add Student</h2>
+
+<form id="studentForm">
+
+<div class="form-group">
+<label>Name</label>
+<input type="text" id="name" required>
+</div>
+
+<div class="form-group">
+<label>Age</label>
+<input type="number" id="age" required>
+</div>
+
+<div class="form-group">
+<label>Course</label>
+<input type="text" id="course" required>
+</div>
+
+<div class="form-group">
+<label>Email</label>
+<input type="email" id="email" required>
+</div>
+
+<button class="btn btn-create" type="submit">
+Add Student
+</button>
+
+</form>
+
+</div>
+
+<!-- Table Section -->
+
+<div class="card">
+
+<h2>Student Records</h2>
+
+<div class="search-bar">
+<input type="text" id="searchEmail" placeholder="Search by Email">
+<button class="btn btn-search" onclick="searchStudent()">
+Search
+</button>
+</div>
+
+<div class="table-container">
+
+<table>
+
+<thead>
+<tr>
+<th>Name</th>
+<th>Age</th>
+<th>Course</th>
+<th>Email</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="studentTable">
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const API_URL="http://127.0.0.1:8000";
+
+document.getElementById("studentForm")
+.addEventListener("submit",async(e)=>{
+
+e.preventDefault();
+
+const student={
+name:document.getElementById("name").value,
+age:Number(document.getElementById("age").value),
+course:document.getElementById("course").value,
+email:document.getElementById("email").value
+};
+
+try{
+
+await fetch(`${API_URL}/students`,{
+method:"POST",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify(student)
+});
+
+alert("Student Added Successfully");
+
+loadStudents();
+
+document.getElementById("studentForm").reset();
+
+}catch(error){
+alert("Error Adding Student");
+}
+
+});
+
+async function loadStudents(){
+
+const response=await fetch(`${API_URL}/students`);
+
+const data=await response.json();
+
+const table=document.getElementById("studentTable");
+
+table.innerHTML="";
+
+data.forEach(student=>{
+
+table.innerHTML+=`
+<tr>
+<td>${student.name}</td>
+<td>${student.age}</td>
+<td>${student.course}</td>
+<td>${student.email}</td>
+
+<td>
+
+<button class="action-btn edit"
+onclick="updateStudent('${student.email}')">
+Update
+</button>
+
+<button class="action-btn delete"
+onclick="deleteStudent('${student.email}')">
+Delete
+</button>
+
+</td>
+
+</tr>
+`;
+
+});
+
+}
+
+async function deleteStudent(email){
+
+if(!confirm("Delete Student?"))
+return;
+
+await fetch(`${API_URL}/students/${email}`,{
+method:"DELETE"
+});
+
+loadStudents();
+
+}
+
+async function updateStudent(email){
+
+const newCourse=prompt("Enter New Course");
+
+if(!newCourse)
+return;
+
+await fetch(`${API_URL}/students/${email}`,{
+method:"PUT",
+headers:{
+"Content-Type":"application/json"
+},
+body:JSON.stringify({
+course:newCourse
+})
+});
+
+loadStudents();
+
+}
+
+async function searchStudent(){
+
+const email=document.getElementById("searchEmail").value;
+
+if(!email){
+loadStudents();
+return;
+}
+
+const response=await fetch(
+`${API_URL}/students/${email}`
+);
+
+if(response.status!==200){
+alert("Student Not Found");
+return;
+}
+
+const student=await response.json();
+
+const table=document.getElementById("studentTable");
+
+table.innerHTML=`
+<tr>
+<td>${student.name}</td>
+<td>${student.age}</td>
+<td>${student.course}</td>
+<td>${student.email}</td>
+
+<td>
+
+<button class="action-btn edit"
+onclick="updateStudent('${student.email}')">
+Update
+</button>
+
+<button class="action-btn delete"
+onclick="deleteStudent('${student.email}')">
+Delete
+</button>
+
+</td>
+
+</tr>
+`;
+
+}
+
+loadStudents();
+
+</script>
+
+</body>
+</html>
