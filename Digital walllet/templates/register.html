@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigiWallet - Create Free Secure Account</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght::400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        /* Modern Fintech CSS Variables matching the Dark Slate Login Template perfectly */
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-glow: rgba(79, 70, 229, 0.15);
+            --primary-light: #818cf8;
+            --bg-canvas: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --border-color: #334155;
+            --radius-xl: 24px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-canvas);
+            margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh;
+            color: var(--text-main); letter-spacing: -0.01em;
+            box-sizing: border-box;
+        }
+
+        /* Authentication Container Card */
+        .auth-container {
+            width: 100%; max-width: 480px; padding: 2.5rem; background-color: var(--card-bg);
+            border: 1px solid var(--border-color); border-radius: var(--radius-xl);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); box-sizing: border-box;
+            transition: var(--transition);
+        }
+        .auth-container:hover {
+            border-color: #475569;
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-header h2 {
+            margin: 0 0 0.5rem 0;
+            color: var(--text-main);
+            font-size: 2rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+        }
+
+        .auth-header p.subtitle {
+            color: var(--text-muted);
+            margin: 0;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        /* Form Controls and Input Formats */
+        .form-group {
+            margin-bottom: 1.25rem;
+            position: relative;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.05em;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        input {
+            width: 100%; padding: 1rem 1.25rem; border: 1px solid var(--border-color); border-radius: 12px;
+            background: #0f172a; color: white; font-size: 1rem; font-family: inherit; font-weight: 500; box-sizing: border-box; transition: var(--transition);
+        }
+
+        input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-glow);
+            background: #111c34;
+        }
+
+        /* Dynamic Input States Feedback modifiers */
+        input.invalid-input {
+            border-color: var(--danger) !important;
+            background-color: #1e1b1b !important;
+        }
+
+        input.invalid-input:focus {
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15) !important;
+        }
+
+        input.valid-input {
+            border-color: var(--success) !important;
+        }
+
+        .error-hint {
+            color: var(--danger);
+            font-size: 0.75rem;
+            margin-top: 0.45rem;
+            display: none;
+            font-weight: 500;
+            line-height: 1.4;
+            animation: fadeIn 0.2s ease-in-out;
+        }
+
+        /* Password Strength Meter UI */
+        .strength-container {
+            margin-top: 0.6rem;
+            display: none;
+        }
+
+        .strength-meter-bg {
+            height: 6px;
+            width: 100%;
+            background-color: #334155;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .strength-meter-fill {
+            height: 100%;
+            width: 0%;
+            background-color: var(--danger);
+            transition: all 0.3s ease;
+        }
+
+        .strength-text {
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.35rem;
+            display: block;
+        }
+
+        /* Submission Buttons */
+        .btn {
+            width: 100%; padding: 1.1rem; background: var(--primary); color: white; font-weight: 700; font-size: 1rem;
+            border: none; border-radius: 12px; cursor: pointer; transition: var(--transition); box-shadow: 0 4px 12px var(--primary-glow); margin-top: 1rem;
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px var(--primary-glow);
+        }
+
+        .btn:active { transform: translateY(0); }
+
+        /* Dynamic Feedback Response Banners */
+        .global-alert {
+            padding: 0.85rem 1.2rem;
+            border-radius: 12px;
+            font-size: 0.875rem;
+            margin-bottom: 1.5rem;
+            display: none;
+            font-weight: 600;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .alert-danger {
+            background: #2d1f1f;
+            color: #fca5a5;
+            border: 1px solid #7f1d1d;
+        }
+
+        .alert-success {
+            background: #142d22;
+            color: #6ee7b7;
+            border: 1px solid #064e3b;
+        }
+
+        .footer-links {
+            text-align: center;
+            margin-top: 1.75rem;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .footer-links a {
+            color: var(--primary-light);
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: #a5b4fc;
+            text-decoration: underline;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <div class="auth-header">
+            <h2>Create Account</h2>
+            <p class="subtitle">Complete the credentials below to initialize a secure wallet node.</p>
+        </div>
+
+        <div id="globalAlert" class="global-alert"></div>
+
+        <form id="registerForm" onsubmit="executeSecureRegistration(event)" novalidate>
+            
+            <div class="form-group">
+                <label for="nameInput">Full Legal Name</label>
+                <div class="input-wrapper">
+                    <input 
+                        type="text" 
+                        id="nameInput" 
+                        placeholder="e.g. Aishwarya Kumar" 
+                        autocomplete="name"
+                        required
+                    >
+                </div>
+                <div id="nameError" class="error-hint">Name can only contain alphabetic letters and spaces, between 2-50 characters.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="emailInput">Email Address</label>
+                <div class="input-wrapper">
+                    <input 
+                        type="email" 
+                        id="emailInput" 
+                        placeholder="name@domain.com" 
+                        autocomplete="email"
+                        required
+                    >
+                </div>
+                <div id="emailError" class="error-hint">Please supply a complete, structurally valid email layout format.</div>
+            </div>
+
+            <div class="form-group">
+                <label for="passwordInput">Choose Secure Password</label>
+                <div class="input-wrapper">
+                    <input 
+                        type="password" 
+                        id="passwordInput" 
+                        placeholder="••••••••" 
+                        autocomplete="new-password"
+                        required
+                    >
+                </div>
+                <div id="strengthContainer" class="strength-container">
+                    <div class="strength-meter-bg">
+                        <div id="strengthMeterFill" class="strength-meter-fill"></div>
+                    </div>
+                    <span id="strengthText" class="strength-text">Password Strength: Too Weak</span>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="passwordConfirmInput">Confirm Chosen Password</label>
+                <div class="input-wrapper">
+                    <input 
+                        type="password" 
+                        id="passwordConfirmInput" 
+                        placeholder="••••••••" 
+                        autocomplete="new-password"
+                        required
+                    >
+                </div>
+                <div id="confirmError" class="error-hint">The confirmation password does not match your chosen parameters.</div>
+            </div>
+
+            <button type="submit" class="btn">Register Free Wallet</button>
+        </form>
+
+        <div class="footer-links">
+            Already have an active wallet? <a href="/">Secure Login</a>
+        </div>
+    </div>
+
+    <script>
+        const nameField = document.getElementById('nameInput');
+        const emailField = document.getElementById('emailInput');
+        const passwordField = document.getElementById('passwordInput');
+        const confirmField = document.getElementById('passwordConfirmInput');
+        
+        const nameErrorHint = document.getElementById('nameError');
+        const emailErrorHint = document.getElementById('emailError');
+        const confirmErrorHint = document.getElementById('confirmError');
+        const globalAlertBlock = document.getElementById('globalAlert');
+
+        // Layout RegEx Match Patterns matching main.py strict format logic
+        const nameSyntaxPattern = /^[a-zA-Z\s]{2,50}$/;
+        const emailSyntaxPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
+        // Attach clean real-time interaction hooks
+        nameField.addEventListener('input', validateNameLayout);
+        emailField.addEventListener('input', validateEmailLayout);
+        passwordField.addEventListener('input', analyzePasswordComplexity);
+        confirmField.addEventListener('input', verifyMatchingPasswords);
+
+        function validateNameLayout() {
+            const val = nameField.value.trim();
+            if (val === "") {
+                nameField.classList.remove('invalid-input', 'valid-input');
+                nameErrorHint.style.display = 'none';
+                return false;
+            }
+            if (!nameSyntaxPattern.test(val)) {
+                nameField.classList.add('invalid-input');
+                nameField.classList.remove('valid-input');
+                nameErrorHint.style.display = 'block';
+                return false;
+            } else {
+                nameField.classList.remove('invalid-input');
+                nameField.classList.add('valid-input');
+                nameErrorHint.style.display = 'none';
+                return true;
+            }
+        }
+
+        function validateEmailLayout() {
+            const val = emailField.value.trim();
+            if (val === "") {
+                emailField.classList.remove('invalid-input', 'valid-input');
+                emailErrorHint.style.display = 'none';
+                return false;
+            }
+            if (!emailSyntaxPattern.test(val)) {
+                emailField.classList.add('invalid-input');
+                emailField.classList.remove('valid-input');
+                emailErrorHint.style.display = 'block';
+                return false;
+            } else {
+                emailField.classList.remove('invalid-input');
+                emailField.classList.add('valid-input');
+                emailErrorHint.style.display = 'none';
+                return true;
+            }
+        }
+
+        function analyzePasswordComplexity() {
+            const passValue = passwordField.value;
+            const container = document.getElementById('strengthContainer');
+            const fill = document.getElementById('strengthMeterFill');
+            const txt = document.getElementById('strengthText');
+
+            if (passValue.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+            let complexityPoints = 0;
+
+            if (passValue.length >= 8) complexityPoints++;
+            if (/[A-Z]/.test(passValue)) complexityPoints++;
+            if (/[0-9]/.test(passValue)) complexityPoints++;
+            if (/[^A-Za-z0-9]/.test(passValue)) complexityPoints++;
+
+            if (complexityPoints <= 1) {
+                fill.style.width = '25%';
+                fill.style.backgroundColor = 'var(--danger)';
+                txt.innerText = 'Password Strength: Weak (Add numbers/caps)';
+                txt.style.color = 'var(--danger)';
+            } else if (complexityPoints === 2 || complexityPoints === 3) {
+                fill.style.width = '60%';
+                fill.style.backgroundColor = 'var(--warning)';
+                txt.innerText = 'Password Strength: Medium (Good choice)';
+                txt.style.color = 'var(--warning)';
+            } else {
+                fill.style.width = '100%';
+                fill.style.backgroundColor = 'var(--success)';
+                txt.innerText = 'Password Strength: Highly Secure';
+                txt.style.color = 'var(--success)';
+            }
+            verifyMatchingPasswords();
+        }
+
+        function verifyMatchingPasswords() {
+            const p1 = passwordField.value;
+            const p2 = confirmField.value;
+
+            if (p2 === "") {
+                confirmField.classList.remove('invalid-input', 'valid-input');
+                confirmErrorHint.style.display = 'none';
+                return false;
+            }
+
+            if (p1 !== p2) {
+                confirmField.classList.add('invalid-input');
+                confirmField.classList.remove('valid-input');
+                confirmErrorHint.style.display = 'block';
+                return false;
+            } else {
+                confirmField.classList.remove('invalid-input');
+                confirmField.classList.add('valid-input');
+                confirmErrorHint.style.display = 'none';
+                return true;
+            }
+        }
+
+        async function executeSecureRegistration(event) {
+            event.preventDefault();
+            globalAlertBlock.style.display = 'none';
+
+            const isNameValid = validateNameLayout();
+            const isEmailValid = validateEmailLayout();
+            const isMatchValid = verifyMatchingPasswords();
+            const rawPassword = passwordField.value;
+
+            if (!isNameValid) { nameField.focus(); return; }
+            if (!isEmailValid) { emailField.focus(); return; }
+            if (rawPassword.length < 4) { alert("Password input is structurally too short."); passwordField.focus(); return; }
+            if (!isMatchValid) { confirmField.focus(); return; }
+
+            try {
+                const response = await fetch('/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: nameField.value.trim(),
+                        email: emailField.value.trim().toLowerCase(),
+                        password: rawPassword
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.detail || "Registration workflow blocked at validation node.");
+                }
+
+                globalAlertBlock.className = "global-alert alert-success";
+                globalAlertBlock.innerText = "Profile Matrix Activated! Redirecting to secure login interface...";
+                globalAlertBlock.style.display = 'block';
+
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 2200);
+
+            } catch (err) {
+                globalAlertBlock.className = "global-alert alert-danger";
+                globalAlertBlock.innerText = err.message;
+                globalAlertBlock.style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+        }
+    </script>
+</body>
+</html>

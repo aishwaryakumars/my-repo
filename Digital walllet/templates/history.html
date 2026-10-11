@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transaction History | DigiWallet</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        .fade-in { animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body class="bg-slate-50 min-h-screen p-6 md:p-12">
+    <div class="max-w-3xl mx-auto">
+        <div class="flex items-center justify-between mb-8">
+            <h1 class="text-3xl font-bold text-slate-900">Transaction Ledger</h1>
+            <span id="statusIndicator" class="text-xs font-semibold px-3 py-1 bg-green-100 text-green-600 rounded-full">● Live Sync Active</span>
+        </div>
+
+        <div id="ledgerContainer" class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+            <table class="w-full">
+                <thead class="bg-slate-50 border-b border-slate-200">
+                    <tr>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Transaction</th>
+                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Category</th>
+                        <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="historyBody" class="divide-y divide-slate-100">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        async function fetchLedger() {
+            const email = localStorage.getItem('userEmail') || "aish@gmail.com";
+            const response = await fetch(`/api/ledger-history/${email}`);
+            const data = await response.json();
+            const body = document.getElementById('historyBody');
+            
+            body.innerHTML = data.history.map(tx => `
+                <tr class="fade-in hover:bg-slate-50 transition-colors">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center gap-3">
+                            <div class="p-2 rounded-lg ${tx.amount > 0 ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}">
+                                <i data-lucide="${tx.amount > 0 ? 'arrow-down-left' : 'arrow-up-right'}"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-semibold text-slate-900">${tx.type.split(':')[0]}</p>
+                                <p class="text-xs text-slate-400">${tx.timestamp}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 text-sm text-slate-600">${tx.type.split(':')[1] || 'General'}</td>
+                    <td class="px-6 py-4 text-right text-sm font-bold ${tx.amount > 0 ? 'text-green-600' : 'text-slate-900'}">
+                        ${tx.amount > 0 ? '+' : ''}${tx.amount.toFixed(2)}
+                    </td>
+                </tr>
+            `).join('');
+            
+            lucide.createIcons(); // Refresh icons
+        }
+
+        // Real-time loop
+        fetchLedger();
+        setInterval(fetchLedger, 3000);
+    </script>
+</body>
+</html>

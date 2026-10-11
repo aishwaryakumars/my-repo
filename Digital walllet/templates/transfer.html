@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigiWallet - Transfer Funds</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+    <style>
+        /* Reusing global layout variables */
+        body { display: flex; min-height: 100vh; justify-content: flex-start; align-items: stretch; background-color: #f3f4f6; }
+        .sidebar { width: 260px; background-color: #1f2937; color: white; display: flex; flex-direction: column; padding: 1.5rem; }
+        .sidebar h2 { font-size: 1.5rem; margin-bottom: 2rem; text-align: center; color: #818cf8; }
+        .sidebar a { color: #d1d5db; text-decoration: none; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border-radius: 6px; font-weight: 500; }
+        .sidebar a:hover, .sidebar a.active { background-color: #4f46e5; color: white; }
+        .logout-btn { margin-top: auto; background-color: #dc2626; text-align: center; }
+        .logout-btn:hover { background-color: #b91c1c !important; }
+        
+        .main-content { flex-grow: 1; padding: 2rem; }
+        .header { margin-bottom: 2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem; }
+        .transfer-card { background: white; padding: 2rem; border-radius: 10px; max-width: 500px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>DigiWallet</h2>
+        <a href="/dashboard">🏠 Dashboard</a>
+        <a href="/transfer-page" class="active">💸 Transfer Money</a>
+        <a href="/request-page">📥 Payment Requests</a>
+        <a href="/transactions-page">📜 Transaction History</a>
+        <a href="/notifications-page">🔔 Notifications</a>
+        <a href="/bfs-page">🕸️ BFS Network Path</a>
+        <a href="/profile">👤 My Profile</a>
+        <a href="#" class="logout-btn" id="logoutLink">🚪 Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Transfer Money</h1>
+            <p style="color: #6b7280;">Send funds immediately to another user's email address</p>
+        </div>
+
+        <div class="transfer-card">
+            <form id="transferForm">
+                <div style="margin-bottom: 1.25rem;">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Recipient Email</label>
+                    <input type="email" id="receiverEmail" style="width:100%; padding:0.75rem; border:1px solid #d1d5db; border-radius:6px;" required placeholder="user@example.com">
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display:block; margin-bottom:0.5rem; font-weight:500;">Amount (₹)</label>
+                    <input type="number" id="transferAmount" style="width:100%; padding:0.75rem; border:1px solid #d1d5db; border-radius:6px;" required min="1" placeholder="0.00">
+                </div>
+                <button type="submit" style="width:100%; padding:0.75rem; background-color:#4f46e5; color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer;">Confirm Transfer</button>
+            </form>
+            <div id="transferStatus" style="margin-top:1rem; text-align:center; font-weight:bold;"></div>
+        </div>
+    </div>
+
+    <script>
+        const senderEmail = localStorage.getItem('userEmail');
+        if (!senderEmail) window.location.href = '/';
+
+        document.getElementById('transferForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const receiver_email = document.getElementById('receiverEmail').value;
+            const amount = parseFloat(document.getElementById('transferAmount').value);
+            const statusBox = document.getElementById('transferStatus');
+
+            if (senderEmail === receiver_email) {
+                statusBox.style.color = "#ef4444";
+                statusBox.innerText = "You cannot transfer money to yourself.";
+                return;
+            }
+
+            try {
+                const response = await fetch('/transfer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sender_email: senderEmail, receiver_email, amount })
+                });
+
+                const data = await response.json();
+
+                if (data.message === "Transfer successful") {
+                    statusBox.style.color = "#10b981";
+                    statusBox.innerText = `Successfully sent ₹${amount} to ${receiver_email}!`;
+                    document.getElementById('transferForm').reset();
+                } else {
+                    statusBox.style.color = "#ef4444";
+                    statusBox.innerText = data.message;
+                }
+            } catch (err) {
+                statusBox.style.color = "#ef4444";
+                statusBox.innerText = "Error connecting to the backend service.";
+            }
+        });
+
+        document.getElementById('logoutLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.clear();
+            window.location.href = '/';
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigiWallet - Payment Requests</title>
+    <link rel="stylesheet" href="{{ url_for('static', path='/css/style.css') }}">
+    <style>
+        body { display: flex; min-height: 100vh; justify-content: flex-start; align-items: stretch; background-color: #f3f4f6; }
+        .sidebar { width: 260px; background-color: #1f2937; color: white; display: flex; flex-direction: column; padding: 1.5rem; }
+        .sidebar h2 { font-size: 1.5rem; margin-bottom: 2rem; text-align: center; color: #818cf8; }
+        .sidebar a { color: #d1d5db; text-decoration: none; padding: 0.75rem 1rem; margin-bottom: 0.5rem; border-radius: 6px; font-weight: 500; }
+        .sidebar a:hover, .sidebar a.active { background-color: #4f46e5; color: white; }
+        .logout-btn { margin-top: auto; background-color: #dc2626; text-align: center; }
+        .logout-btn:hover { background-color: #b91c1c !important; }
+        
+        .main-content { flex-grow: 1; padding: 2rem; overflow-y: auto; }
+        .header { margin-bottom: 2rem; border-bottom: 2px solid #e5e7eb; padding-bottom: 1rem; }
+        
+        .split-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 2rem; }
+        .card { background: white; padding: 1.5rem; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); height: fit-content; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+        th, td { text-align: left; padding: 0.75rem; border-bottom: 1px solid #e5e7eb; font-size: 0.9rem; }
+        th { background-color: #f9fafb; color: #4b5563; }
+        
+        .btn-action { padding: 0.4rem 0.75rem; border: none; border-radius: 4px; font-weight: 600; cursor: pointer; font-size: 0.8rem; margin-right: 0.25rem; color: white; }
+        .btn-accept { background-color: #10b981; }
+        .btn-reject { background-color: #ef4444; }
+        .status-badge { padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+        .status-pending { background-color: #fef3c7; color: #d97706; }
+        .status-accepted { background-color: #d1fae5; color: #065f46; }
+        .status-rejected { background-color: #fee2e2; color: #991b1b; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>DigiWallet</h2>
+        <a href="/dashboard">🏠 Dashboard</a>
+        <a href="/transfer-page">💸 Transfer Money</a>
+        <a href="/request-page" class="active">📥 Payment Requests</a>
+        <a href="/transactions-page">📜 Transaction History</a>
+        <a href="/notifications-page">🔔 Notifications</a>
+        <a href="/bfs-page">🕸️ BFS Network Path</a>
+        <a href="/profile">👤 My Profile</a>
+        <a href="#" class="logout-btn" id="logoutLink">🚪 Logout</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header">
+            <h1>Payment Requests</h1>
+            <p style="color: #6b7280;">Ask other users for funds or settle incoming money demands</p>
+        </div>
+
+        <div class="split-grid">
+            <div class="card">
+                <h3>Create New Request</h3>
+                <form id="requestForm" style="margin-top: 1rem;">
+                    <div style="margin-bottom: 1rem;">
+                        <label style="display:block; margin-bottom:0.4rem; font-weight:500;">Payer's Email</label>
+                        <input type="email" id="payerEmail" style="width:100%; padding:0.6rem; border:1px solid #d1d5db; border-radius:6px;" required placeholder="payer@example.com">
+                    </div>
+                    <div style="margin-bottom: 1.25rem;">
+                        <label style="display:block; margin-bottom:0.4rem; font-weight:500;">Amount (₹)</label>
+                        <input type="number" id="requestAmount" style="width:100%; padding:0.6rem; border:1px solid #d1d5db; border-radius:6px;" required min="1" placeholder="0.00">
+                    </div>
+                    <button type="submit" style="width:100%; padding:0.6rem; background-color:#4f46e5; color:white; border:none; border-radius:6px; font-weight:600; cursor:pointer;">Send Request</button>
+                </form>
+                <div id="formStatus" style="margin-top:1rem; text-align:center; font-weight:bold; font-size:0.9rem;"></div>
+            </div>
+
+            <div class="card">
+                <h3>Incoming Demands (To Be Paid By You)</h3>
+                <div id="tableContainer">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Requester</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestsTableBody">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const currentUserEmail = localStorage.getItem('userEmail');
+        if (!currentUserEmail) window.location.href = '/';
+
+        // 1. Submit Request Logic Loop
+        document.getElementById('requestForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const payer_email = document.getElementById('payerEmail').value;
+            const amount = parseFloat(document.getElementById('requestAmount').value);
+            const statusBox = document.getElementById('formStatus');
+
+            if (currentUserEmail === payer_email) {
+                statusBox.style.color = "#ef4444";
+                statusBox.innerText = "You cannot send a payment request to yourself.";
+                return;
+            }
+
+            try {
+                const response = await fetch('/request-money', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requester_email: currentUserEmail, payer_email, amount })
+                });
+                const data = await response.json();
+                
+                if (data.message === "Payment request sent") {
+                    statusBox.style.color = "#10b981";
+                    statusBox.innerText = "Payment request transmitted successfully!";
+                    document.getElementById('requestForm').reset();
+                } else {
+                    statusBox.style.color = "#ef4444";
+                    statusBox.innerText = data.message;
+                }
+            } catch (err) {
+                statusBox.style.color = "#ef4444";
+                statusBox.innerText = "Error syncing with system endpoints.";
+            }
+        });
+
+        // 2. Fetch Incoming Requests
+        async function fetchIncomingRequests() {
+            try {
+                const response = await fetch(`/requests/${currentUserEmail}`);
+                const list = await response.json();
+                const tbody = document.getElementById('requestsTableBody');
+                tbody.innerHTML = '';
+
+                if (list.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#6b7280;">No incoming demands pending.</td></tr>`;
+                    return;
+                }
+
+                list.forEach(req => {
+                    const tr = document.createElement('tr');
+                    
+                    let actionCell = `<span class="status-badge status-${req.status.toLowerCase()}">${req.status}</span>`;
+                    if (req.status === "PENDING") {
+                        actionCell = `
+                            <button class="btn-action btn-accept" onclick="processRequest('accept', '${req.requester_email}', ${req.amount})">Accept</button>
+                            <button class="btn-action btn-reject" onclick="processRequest('reject', '${req.requester_email}', ${req.amount})">Reject</button>
+                        `;
+                    }
+
+                    tr.innerHTML = `
+                        <td>${req.requester_email}</td>
+                        <td>₹${parseFloat(req.amount).toFixed(2)}</td>
+                        <td><span class="status-badge status-${req.status.toLowerCase()}">${req.status}</span></td>
+                        <td>${actionCell}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error("Failed fetching request registry:", err);
+            }
+        }
+
+        // 3. Process Accept / Reject Actions
+        async function processRequest(action, requester_email, amount) {
+            const endpoint = action === 'accept' ? '/accept-request' : '/reject-request';
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ requester_email, payer_email: currentUserEmail, amount })
+                });
+                const data = await response.json();
+                alert(data.message);
+                fetchIncomingRequests();
+            } catch (err) {
+                alert("Error modifying request status routing schema.");
+            }
+        }
+
+        // Initial running triggers
+        fetchIncomingRequests();
+
+        document.getElementById('logoutLink').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.clear();
+            window.location.href = '/';
+        });
+    </script>
+</body>
+</html>

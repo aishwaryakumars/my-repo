@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigiWallet - Analytics Suite</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --sidebar-bg: #0f172a;
+            --bg-canvas: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --border-color: #e2e8f0;
+        }
+
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-canvas); margin: 0; display: flex; min-height: 100vh; color: var(--text-main); }
+        
+        .sidebar { width: 280px; background-color: var(--sidebar-bg); color: #ffffff; display: flex; flex-direction: column; padding: 2rem 1.5rem; box-sizing: border-box; position: fixed; height: 100vh; left: 0; top: 0; z-index: 100; }
+        .sidebar-brand { font-size: 1.5rem; font-weight: 800; color: #c7d2fe; margin-bottom: 3rem; display: flex; align-items: center; gap: 0.75rem; }
+        .sidebar-menu { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .sidebar-item a { display: flex; align-items: center; gap: 1rem; color: #94a3b8; padding: 0.85rem 1.25rem; text-decoration: none; border-radius: 12px; font-weight: 600; margin-bottom: 0.5rem; }
+        .sidebar-item a:hover, .sidebar-item a.active { background-color: rgba(255, 255, 255, 0.08); color: #ffffff; }
+        .sidebar-item a.active { background-color: var(--primary); }
+
+        .main-workspace { margin-left: 280px; flex-grow: 1; padding: 3rem; box-sizing: border-box; }
+        .analytics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2.5rem; }
+        .card { background-color: var(--card-bg); border-radius: 20px; padding: 2rem; border: 1px solid var(--border-color); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.01); box-sizing: border-box; }
+        .metric-title { font-size: 0.85rem; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.5px; font-weight: 700; margin: 0 0 0.5rem 0;}
+        .metric-num { font-size: 2.25rem; font-weight: 800; }
+
+        /* Dynamic Production Visual Chart Components */
+        .chart-panel-frame { display: grid; grid-template-columns: 2fr 1fr; gap: 2rem; margin-bottom: 2.5rem; }
+        
+        /* Bar Chart Visualized Geometry Wrapper Layout */
+        .bar-chart-visualization-container {
+            display: flex; justify-content: space-around; align-items: flex-end; height: 300px;
+            padding: 2rem 1rem 1rem 1rem; background: #0f172a; border-radius: 16px; position: relative; box-sizing: border-box;
+        }
+        
+        .bar-column-node {
+            display: flex; flex-direction: column; align-items: center; width: 60px; position: relative; height: 100%; justify-content: flex-end;
+        }
+        
+        .bar-fill-polygon {
+            width: 100%; background: linear-gradient(180deg, var(--primary) 0%, #818cf8 100%);
+            border-radius: 8px 8px 0 0; transition: height 1s ease-out; height: 0%; min-height: 4px; position: relative;
+        }
+
+        .bar-fill-polygon:hover .chart-tooltip-bubble { opacity: 1; transform: translate(-50%, -8px); }
+
+        .chart-tooltip-bubble {
+            position: absolute; top: -45px; left: 50%; transform: translate(-50%, 0);
+            background: #ffffff; color: #020617; padding: 0.4rem 0.75rem; border-radius: 6px;
+            font-size: 0.75rem; font-weight: 700; border: 1px solid var(--border-color);
+            pointer-events: none; opacity: 0; transition: all 0.2s ease; white-space: nowrap; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.3);
+        }
+
+        .bar-label-caption { color: #94a3b8; font-size: 0.75rem; font-weight: 600; margin-top: 0.75rem; text-align: center; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; width: 100%; }
+
+        .progress-indicator-row { margin-bottom: 1.25rem; }
+        .progress-meta-text { display: flex; justify-content: space-between; font-size: 0.85rem; font-weight: 600; margin-bottom: 0.4rem; }
+        .progress-track-bg { width: 100%; height: 10px; background: #e2e8f0; border-radius: 10px; overflow: hidden; }
+        .progress-track-fill { height: 100%; background: var(--primary); width: 0%; border-radius: 10px; transition: width 0.8s ease; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-brand"><span>💳</span> DigiWallet Core</div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-item"><a href="/dashboard">💼 Main Dashboard</a></li>
+            <li class="sidebar-item"><a href="/analytics-page" class="active">📊 Analytics Insights Suite</a></li>
+            <li class="sidebar-item"><a href="/history-page">📜 Audited Log Ledgers</a></li>
+        </ul>
+    </div>
+
+    <div class="main-workspace">
+        <h1 style="margin:0 0 2.5rem 0; font-size:2.25rem; font-weight:800; letter-spacing:-1px;">Automated Data Analytics Framework</h1>
+
+        <div class="analytics-grid">
+            <div class="card">
+                <p class="metric-title">Aggregate Savings Volumetric Inflow</p>
+                <div id="savingsMetric" class="metric-num" style="color: var(--success);">₹0.00</div>
+            </div>
+            <div class="card">
+                <p class="metric-title">Aggregate Expenses Outflow</p>
+                <div id="spendingMetric" class="metric-num" style="color: var(--danger);">₹0.00</div>
+            </div>
+            <div class="card">
+                <p class="metric-title">Net Liquid Surplus Margin</p>
+                <div id="netMarginMetric" class="metric-num">₹0.00</div>
+            </div>
+        </div>
+
+        <div class="chart-panel-frame">
+            <div class="card">
+                <h3 style="margin-top:0; margin-bottom:2rem; font-size:1.15rem;">Categorical Expense Dispersion Chart</h3>
+                <div class="bar-chart-visualization-container" id="pureGeometricChartAxisBox">
+                    <p style="color:#94a3b8; font-size:0.9rem;">Processing visualization tracking nodes charts...</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <h3 style="margin-top:0; margin-bottom:1.5rem; font-size:1.15rem;">Resource Volumetric Shares</h3>
+                <div id="linearProgressMetersTrackbox">
+                    <p style="color:var(--text-muted); font-size:0.85rem;">Compiling budget metrics parameters mapping rows...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const systemMailTokenKey = localStorage.getItem('userEmail') || "aish@gmail.com";
+
+        async function triggerAnalyticsEnginePipeline() {
+            try {
+                const response = await fetch(`/analytics/${systemMailTokenKey}`);
+                const data = await response.json();
+                console.log(data);
+                const savings = data.monthly_savings || 0.0;
+                const spending = data.monthly_spending || 0.0;
+                const margin = savings - spending;
+                
+                document.getElementById('savingsMetric').innerText = `₹${savings.toFixed(2)}`;
+                document.getElementById('spendingMetric').innerText = `₹${spending.toFixed(2)}`;
+                
+                const mBox = document.getElementById('netMarginMetric');
+                mBox.innerText = `₹${margin.toFixed(2)}`;
+                mBox.style.color = margin >= 0 ? 'var(--success)' : 'var(--danger)';
+
+                const breakdownMap = data.purpose_breakdown_spending || {};
+                console.log("Breakdown Map:", breakdownMap);
+console.log("Monthly Spending:", spending);
+
+Object.entries(breakdownMap).forEach(([key, val]) => {
+    console.log(`${key}: ₹${val}`);
+});
+                const chartContainer = document.getElementById('pureGeometricChartAxisBox');
+                const metersContainer = document.getElementById('linearProgressMetersTrackbox');
+                
+                chartContainer.innerHTML = "";
+                metersContainer.innerHTML = "";
+
+                if(Object.keys(breakdownMap).length === 0) {
+                    chartContainer.innerHTML = `<p style="color:#94a3b8; font-size:0.9rem;">No categorical cash outflow variables mapped inside database matrices arrays yet.</p>`;
+                    metersContainer.innerHTML = `<p style="color:var(--text-muted); font-size:0.85rem;">Awaiting transaction data index inputs configurations patterns.</p>`;
+                    return;
+                }
+
+                // Compute extreme bounds constraint ceilings variables to normalize height configurations percentages
+                const maxExpenseValueBoundCeiling = Math.max(...Object.values(breakdownMap));
+
+                for (const [key, val] of Object.entries(breakdownMap)) {
+                   const normalizedHeightPercentage =
+    maxExpenseValueBoundCeiling > 0
+        ? Math.max((val / maxExpenseValueBoundCeiling) * 100, 5)
+        : 5;
+                    const aggregateOutflowShareRatio = spending > 0 ? (val / spending) * 100 : 0;
+
+                    // 1. Construct Geometric Polyfill Column Bars
+                    const columnNode = document.createElement('div');
+                    columnNode.className = 'bar-column-node';
+                    columnNode.innerHTML = `
+                        <div class="bar-fill-polygon" style="height: ${normalizedHeightPercentage}%">
+                            <div class="chart-tooltip-bubble">₹${val.toFixed(2)}</div>
+                        </div>
+                        <div class="bar-label-caption" title="${key}">${key}</div>
+                    `;
+                    chartContainer.appendChild(columnNode);
+
+                    // 2. Build Linear Split Progress Share Rows
+                    const barRow = document.createElement('div');
+                    barRow.className = 'progress-indicator-row';
+                    barRow.innerHTML = `
+                        <div class="progress-meta-text"><span>${key}</span><span style="color:var(--danger)">${aggregateOutflowShareRatio.toFixed(0)}%</span></div>
+                        <div class="progress-track-bg"><div class="progress-track-fill" style="width:${aggregateOutflowShareRatio}%"></div></div>
+                    `;
+                    metersContainer.appendChild(barRow);
+                }
+
+            } catch(err) { console.error(err); }
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+    triggerAnalyticsEnginePipeline(); // initial load
+
+    // refresh every 5 seconds
+    setInterval(triggerAnalyticsEnginePipeline, 5000);
+});
+    </script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigiWallet - Gateway Authorization</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-glow: rgba(79, 70, 229, 0.15);
+            --primary-light: #818cf8;
+            --bg-canvas: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+            --border-color: #334155;
+            --radius-xl: 24px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-canvas);
+            margin: 0; padding: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh;
+            color: var(--text-main); letter-spacing: -0.01em;
+        }
+
+        .auth-container {
+            width: 100%; max-width: 450px; padding: 2.5rem; background-color: var(--card-bg);
+            border: 1px solid var(--border-color); border-radius: var(--radius-xl);
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); box-sizing: border-box;
+            transition: var(--transition);
+        }
+        .auth-container:hover {
+            border-color: #475569;
+        }
+
+        h2 { font-size: 2rem; font-weight: 800; margin: 0 0 0.5rem 0; letter-spacing: -0.03em; text-align: center; }
+        p.subtitle { color: var(--text-muted); font-size: 0.95rem; text-align: center; margin: 0 0 2rem 0; font-weight: 500; }
+
+        .form-group { margin-bottom: 1.5rem; }
+        label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem; letter-spacing: 0.05em; }
+        
+        .input-field {
+            width: 100%; padding: 1rem 1.25rem; border: 1px solid var(--border-color); border-radius: 12px;
+            background: #0f172a; color: white; font-size: 1rem; font-family: inherit; font-weight: 500; box-sizing: border-box; transition: var(--transition);
+        }
+        .input-field:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 4px var(--primary-glow); background: #111c34; }
+
+        .btn-submit {
+            width: 100%; padding: 1.1rem; background: var(--primary); color: white; font-weight: 700; font-size: 1rem;
+            border: none; border-radius: 12px; cursor: pointer; transition: var(--transition); box-shadow: 0 4px 12px var(--primary-glow); margin-top: 1rem;
+        }
+        .btn-submit:hover { background: var(--primary-dark); transform: translateY(-1px); box-shadow: 0 6px 20px var(--primary-glow); }
+        .btn-submit:active { transform: translateY(0); }
+
+        .redirect-link { text-align: center; margin-top: 1.5rem; font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+        .redirect-link a { color: var(--primary-light); text-decoration: none; font-weight: 600; transition: var(--transition); }
+        .redirect-link a:hover { color: #a5b4fc; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <h2>Access Terminal</h2>
+        <p class="subtitle">Secure Ledger Authorization Node</p>
+
+        <form id="loginForm" onsubmit="executeGatewayLogin(event)">
+            <div class="form-group">
+                <label>System Email Handle</label>
+                <input type="email" id="loginEmail" class="input-field" placeholder="name@domain.com" required autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label>Security Keyphrase</label>
+                <input type="password" id="loginPassword" class="input-field" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn-submit">Authorize Session</button>
+        </form>
+
+        <div class="redirect-link">
+            New node cluster? <a href="/register-page">Initialize Identity Card</a>
+        </div>
+    </div>
+
+    <script>
+        async function executeGatewayLogin(event) {
+            // Prevent default non-AJAX page reloading lifecycle step behavior
+            event.preventDefault();
+            
+            const emailValue = document.getElementById('loginEmail').value.trim();
+            const passwordValue = document.getElementById('loginPassword').value;
+
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: emailValue, password: passwordValue })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Securely assign identity token mapping to local long-lived storage segments
+                    localStorage.setItem('userEmail', data.email);
+                    localStorage.setItem('userName', data.name);
+                    
+                    // Route user profile view space instantly to the system dashboard entry channel
+                    window.location.href = "/dashboard";
+                } else {
+                    const errorPayload = await response.json();
+                    alert(errorPayload.detail || "Authentication sequence verification dropped by security gateway.");
+                }
+            } catch (err) {
+                console.error("Pipeline breakdown exception trace intercepted:", err);
+                alert("Internal execution network connectivity disruption context caught.");
+            }
+        }
+    </script>
+</body>
+</html>

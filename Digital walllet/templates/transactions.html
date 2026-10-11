@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigiWallet - Command Center Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-glow: rgba(79, 70, 229, 0.15);
+            --sidebar-bg: #0f172a;
+            --bg-canvas: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --success-glow: rgba(16, 185, 129, 0.1);
+            --danger: #ef4444;
+            --border-color: #e2e8f0;
+            --radius-xl: 24px;
+            --radius-lg: 16px;
+            --radius-md: 12px;
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-canvas);
+            margin: 0; padding: 0; display: flex; min-height: 100vh; color: var(--text-main);
+            letter-spacing: -0.01em;
+        }
+
+        /* Persistent Navigation Sidebar */
+        .sidebar {
+            width: 280px; background-color: var(--sidebar-bg); color: #ffffff;
+            display: flex; flex-direction: column; padding: 2.5rem 1.5rem; box-sizing: border-box;
+            position: fixed; height: 100vh; left: 0; top: 0; z-index: 100;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-brand { font-size: 1.5rem; font-weight: 800; color: #ffffff; margin-bottom: 3.5rem; display: flex; align-items: center; gap: 0.75rem; }
+        .sidebar-brand svg { width: 32px; height: 32px; fill: var(--primary-light); }
+        .sidebar-menu { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .sidebar-item a {
+            display: flex; align-items: center; gap: 1rem; color: #94a3b8; padding: 1rem 1.25rem;
+            text-decoration: none; border-radius: var(--radius-md); font-weight: 600; margin-bottom: 0.5rem; transition: var(--transition);
+        }
+        .sidebar-item a svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 2; }
+        .sidebar-item a:hover, .sidebar-item a.active { background-color: rgba(255, 255, 255, 0.06); color: #ffffff; }
+        .sidebar-item a.active { background-color: var(--primary); box-shadow: 0 10px 15px -3px var(--primary-glow); }
+
+        /* Workspace Core Wrapper */
+        .main-workspace { margin-left: 280px; flex-grow: 1; padding: 3.5rem; box-sizing: border-box; max-width: 1400px; }
+        
+        .top-navbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 3rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border-color); }
+        .welcome-meta h1 { margin: 0 0 0.5rem 0; font-size: 2.5rem; font-weight: 800; letter-spacing: -0.03em; }
+        .welcome-meta p { margin: 0; color: var(--text-muted); font-size: 1.1rem; }
+
+        /* Dashboard Grid Architectures */
+        .dashboard-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 2.5rem; margin-bottom: 3rem; }
+        .card { 
+            background-color: var(--card-bg); border-radius: var(--radius-xl); padding: 2.25rem; 
+            border: 1px solid var(--border-color); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02); 
+            box-sizing: border-box; transition: var(--transition); position: relative;
+        }
+        .card:hover { transform: translateY(-2px); box-shadow: 0 15px 30px -10px rgba(0,0,0,0.03); }
+
+        /* Premium Wallet Portfolio Header Element */
+        .balance-showcase { 
+            background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); color: #ffffff; 
+            display: flex; justify-content: space-between; align-items: center; border: none;
+            box-shadow: 0 20px 25px -5px rgba(79, 70, 229, 0.1); overflow: hidden;
+        }
+        .balance-showcase::after {
+            content: ''; position: absolute; width: 300px; height: 300px; background: rgba(79, 70, 229, 0.15);
+            border-radius: 50%; top: -100px; right: -100px; filter: blur(40px); pointer-events: none;
+        }
+        .balance-val { font-size: 3.5rem; font-weight: 800; margin-top: 0.5rem; letter-spacing: -0.03em; background: linear-gradient(120deg, #ffffff, #c7d2fe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        /* Quick Action Grid Framework */
+        .quick-actions-row { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-top: 1.5rem; }
+        .action-tile { 
+            background: var(--bg-canvas); border: 1px solid var(--border-color); border-radius: var(--radius-lg); 
+            padding: 1.75rem; text-align: left; cursor: pointer; transition: var(--transition); display: flex; flex-direction: column; gap: 0.5rem;
+        }
+        .action-tile:hover { border-color: var(--primary); background-color: #f5f3ff; transform: translateY(-4px); }
+        .action-tile-icon { width: 42px; height: 42px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; margin-bottom: 0.25rem; font-size: 1.25rem; }
+        .action-tile-title { font-weight: 700; font-size: 1.1rem; }
+        .action-tile-desc { font-size: 0.85rem; color: var(--text-muted); font-weight: 500; line-height: 1.4; }
+
+        /* Form Control Interfaces updates */
+        .input-control-field { 
+            width: 100%; padding: 1rem 1.25rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); 
+            background: var(--bg-canvas); font-size: 1rem; font-weight: 600; font-family: inherit; box-sizing: border-box; transition: var(--transition);
+        }
+        .input-control-field:focus { outline: none; border-color: var(--primary); background-color: #ffffff; box-shadow: 0 0 0 4px var(--primary-glow); }
+
+        .btn-execution-action { 
+            width: 100%; padding: 1.1rem; background: var(--primary); color: white; font-weight: 700; font-size: 1rem;
+            border: none; border-radius: var(--radius-md); cursor: pointer; transition: var(--transition); box-shadow: 0 4px 12px var(--primary-glow);
+        }
+        .btn-execution-action:hover { background: var(--primary-dark); transform: translateY(-2px); box-shadow: 0 6px 20px var(--primary-glow); }
+
+        /* Blurred Overlay Action Modal Systems Window */
+        .modal-blur-mask { 
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.4); 
+            backdrop-filter: blur(8px); z-index: 1000; display: none; justify-content: center; align-items: center; opacity: 0; transition: opacity 0.25s ease;
+        }
+        .modal-window { 
+            background: #ffffff; border-radius: var(--radius-xl); width: 100%; max-width: 520px; padding: 2.5rem; 
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15); border: 1px solid var(--border-color); transform: scale(0.95); transition: transform 0.25s ease;
+        }
+        .modal-blur-mask.show { opacity: 1; }
+        .modal-blur-mask.show .modal-window { transform: scale(1); }
+        .modal-window h3 { margin-top: 0; font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; margin-bottom: 1.5rem; }
+        .modal-label { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 0.5rem; display: block; }
+        
+        .modal-row-actions { display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem; }
+        .modal-row-actions button { padding: 1rem 1.75rem; border-radius: var(--radius-md); border: none; font-weight: 700; font-size: 0.95rem; cursor: pointer; transition: var(--transition); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <svg viewBox="0 0 24 24"><path d="M21 18V6c0-1.1-.9-2-2-2H5c-1.11 0-2 .9-2 2v12c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2zm-2 0H5V6h14v12zm-3-7c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2c0 1.11.89 2 2 2h4c1.11 0 2-.89 2-2v-2zm-2 2h-4v-2h4v2z"/></svg>
+            <span>DigiWallet Core</span>
+        </div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-item"><a href="/dashboard" class="active"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg> Dashboard</a></li>
+            <li class="sidebar-item"><a href="/analytics-page"><svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z"/></svg> Metrics Analytics</a></li>
+            <li class="sidebar-item"><a href="/history-page"><svg viewBox="0 0 24 24"><path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.25 2.52.77-1.28-3.52-2.09V8z"/></svg> Audit Ledgers</a></li>
+        </ul>
+        <div class="sidebar-item"><a href="#" onclick="terminateSystemSession()" style="color: var(--danger);"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg> Close Workspace</a></div>
+    </div>
+
+    <div class="main-workspace">
+        <div class="top-navbar">
+            <div class="welcome-meta">
+                <h1 id="desktopWelcomeTitle">Workspace Console</h1>
+                <p>Deploy capital movements and monitor liquid configuration states.</p>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <div style="display:flex; flex-direction:column; gap:2.5rem;">
+                <div class="card balance-showcase">
+                    <h3 style="margin:0; text-transform:uppercase; font-size:0.85rem; color:#94a3b8;">Current Balance</h3>
+                    <div class="balance-val" id="desktopBalanceOutput">₹0.00</div>
+                </div>
+
+
+                <div class="card">
+                    <h3 style="margin-top:0; margin-bottom:0.5rem; font-size:1.35rem; font-weight:700;">Asset Mutation Gateway</h3>
+                    <p style="margin:0 0 1.5rem 0; color:var(--text-muted); font-size:0.95rem;">Commit real-time balance adjustments into connected collections documents.</p>
+                    <div class="quick-actions-row">
+                        <div class="action-tile" onclick="invokeSystemActionModal('add_money')">
+                            <div class="action-tile-icon" style="background-color: var(--success-glow); color: var(--success);">📥</div>
+                            <div class="action-tile-title">Deposit Money</div>
+                            <div class="action-tile-desc">Inject liquid float capital instantly into wallet document indexes.</div>
+                        </div>
+                        <div class="action-tile" onclick="invokeSystemActionModal('withdraw')">
+                            <div class="action-tile-icon" style="background-color: rgba(79, 70, 229, 0.1); color: var(--primary);">📤</div>
+                            <div class="action-tile-title">Withdraw Capital</div>
+                            <div class="action-tile-desc">Deduct ledger resources and record outward tracking context tags.</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="display:flex; flex-direction:column; justify-content:space-between;">
+                <div>
+                    <h3 style="margin-top:0; font-size:1.35rem; font-weight:700; margin-bottom:0.5rem;">Salary Alignment Profile</h3>
+                    <p style="margin:0 0 1.5rem 0; color:var(--text-muted); font-size:0.95rem;">Managed automated recurring configuration baselines values allocation.</p>
+                    
+                    <div style="background:var(--bg-canvas); padding:2rem 1.5rem; border-radius:var(--radius-lg); text-align:center; margin: 2rem 0; border:1px solid var(--border-color); box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);">
+                        <span style="font-size:2.5rem; font-weight:800; color:var(--success); letter-spacing:-0.02em;" id="desktopSalaryAllowanceTag">₹0.00</span>
+                        <div style="font-size:0.8rem; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-top:0.5rem; letter-spacing:0.05em;">Current Allocation Limits Map</div>
+                    </div>
+                    
+                    <label class="modal-label">Define Base Limit Matrix</label>
+                    <input type="number" id="desktopSalaryUpdateInputField" class="input-control-field" placeholder="Quantum amount value multiplier (INR)">
+                </div>
+                <button onclick="commitDesktopSalaryConfigurationChange()" class="btn-execution-action" style="margin-top:2rem;">Apply Configuration Matrix</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal-blur-mask" id="desktopActionModalBox">
+        <div class="modal-window">
+            <h3 id="desktopModalTitleText">Operation Framework</h3>
+            
+            <div style="margin-bottom: 1.25rem;">
+                <label class="modal-label">Value Quantum Allocation</label>
+                <input type="number" id="desktopModalAmountField" class="input-control-field" placeholder="0.00 INR">
+            </div>
+
+            <div style="margin-bottom: 1.25rem;">
+                <label class="modal-label">Purpose Categorization Node</label>
+                <select id="desktopModalPurposeDropdownField" class="input-control-field" style="background-image: none; cursor:pointer;">
+                    <option value="Direct Inflow Allocation">Direct Balance Inflow</option>
+                    <option value="Food & Groceries">Food & Groceries</option>
+                    <option value="Rent & Utilities">Rent & Utilities</option>
+                    <option value="Entertainment">Entertainment & Travel</option>
+                    <option value="General Operations">General Miscellaneous Logistics</option>
+                </select>
+            </div>
+
+            <div class="modal-row-actions">
+                <button style="background:#f1f5f9; color: var(--text-main);" onclick="dismissDesktopActionModalBox()">Cancel Execution</button>
+                <button style="background:var(--primary); color:white;" onclick="dispatchDesktopLedgerTransactionAction()">Commit Action Matrix</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const systemMailTokenKey = localStorage.getItem('userEmail') || "aish@gmail.com";
+        const systemNameTokenKey = localStorage.getItem('userName') || "Administrator Core Context";
+        let localStateModalOpTypeFlag = "add_money";
+
+        document.addEventListener("DOMContentLoaded", () => {
+            document.getElementById('desktopWelcomeTitle').innerText = `Welcome, ${systemNameTokenKey}`;
+            synchronizeData();
+        });
+
+      
+        async function synchronizeData() {
+            try {
+                // Fetch Balance
+                const balRes = await fetch(`/balance/${email}`);
+                const balData = await balRes.json();
+                document.getElementById('desktopBalanceOutput').innerText = `₹${parseFloat(balData.balance || 0).toFixed(2)}`;
+
+                // Fetch Salary
+                const salRes = await fetch(`/salary/${email}`);
+                const salData = await salRes.json();
+                document.getElementById('desktopSalaryAllowanceTag').innerText = `₹${parseFloat(salData.salary || 0).toFixed(2)}`;
+            } catch (err) { console.error("Sync error:", err); }
+        }
+
+        async function commitDesktopSalaryConfigurationChange() {
+            const v = parseFloat(document.getElementById('desktopSalaryUpdateInputField').value.trim());
+            if(!v || v <= 0) return alert("Please enter clean positive allocation parameters scalars.");
+            await fetch('/update-salary', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: systemMailTokenKey, amount: v, purpose: "Salary Assignment" })
+            });
+            document.getElementById('desktopSalaryUpdateInputField').value = "";
+            synchronizeData();
+        }
+
+        function invokeSystemActionModal(type) {
+            localStateModalOpTypeFlag = type;
+            document.getElementById('desktopModalTitleText').innerText = type === "add_money" ? "Inbound Asset Allocation Credit" : "Outbound Resource Debit Matrix";
+            
+            const modalShell = document.getElementById('desktopActionModalBox');
+            modalShell.style.display = "flex";
+            setTimeout(() => modalShell.classList.add('show'), 10);
+        }
+
+        function dismissDesktopActionModalBox() {
+            const modalShell = document.getElementById('desktopActionModalBox');
+            modalShell.classList.remove('show');
+            setTimeout(() => modalShell.style.display = "none", 200);
+        }
+
+        async function dispatchDesktopLedgerTransactionAction() {
+            const a = parseFloat(document.getElementById('desktopModalAmountField').value.trim());
+            const p = document.getElementById('desktopModalPurposeDropdownField').value;
+            if(!a || a <= 0) return alert("Operation quantum metrics values must be absolute real numbers.");
+
+            const target = localStateModalOpTypeFlag === "add_money" ? "/add-money" : "/withdrawn";
+            const res = await fetch(target, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: systemMailTokenKey, amount: a, purpose: p })
+            });
+            if(res.ok) { dismissDesktopActionModalBox(); document.getElementById('desktopModalAmountField').value = ""; synchronizeData(); }
+            else { const d = await res.json(); alert(d.detail); }
+        }
+
+        function terminateSystemSession() { localStorage.clear(); window.location.href = "/"; }
+    </script>
+    <div class="phonepe-card p-6 shadow-sm border border-gray-100 mt-6">
+    <h2 class="text-xl font-bold mb-4">Manual Ledger Entry</h2>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <select id="txType" class="p-3 border rounded-lg">
+            <option value="add-money">Deposit</option>
+            <option value="withdrawn">Withdrawal</option>
+        </select>
+        <input id="txPurpose" type="text" placeholder="Purpose (e.g. Food)" class="p-3 border rounded-lg">
+        <input id="txAmount" type="number" placeholder="Amount (₹)" class="p-3 border rounded-lg">
+        <button onclick="commitTx()" class="bg-indigo-600 text-white font-bold py-3 px-6 rounded-lg hover:bg-indigo-700">Commit</button>
+    </div>
+</div>
+
+<script>
+async function commitTx() {
+    const type = document.getElementById('txType').value;
+    const payload = {
+        email: "aish@gmail.com", // Ensure this matches your login state
+        amount: parseFloat(document.getElementById('txAmount').value),
+        purpose: document.getElementById('txPurpose').value
+    };
+
+    const res = await fetch(`/${type}`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+    });
+
+    if (res.ok) {
+        alert("Transaction Registered in Ledger");
+        // Clear inputs after success
+        document.getElementById('txAmount').value = "";
+    } else {
+        alert("Transaction Failed - Check your balance");
+    }
+}
+</script>
+</body>
+</html>
